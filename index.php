@@ -135,4 +135,28 @@ function processMessage($message) {
       apiRequestWebhook("sendMessage", array('chat_id' => $chat_id, "reply_to_message_id" => $message_id, "text" => 'Cool'));
     }
   } else {
-    apiRequest(
+    apiRequest("sendMessage", array('chat_id' => $chat_id, "text" => 'I understand only text messages'));
+  }
+}
+
+
+define('WEBHOOK_URL', 'https://my-site.example.com/secret-path-for-webhooks/');
+
+if (php_sapi_name() == 'cli') {
+  // if run from console, set or delete webhook
+  apiRequest('setWebhook', array('url' => isset($argv[1]) && $argv[1] == 'delete' ? '' : WEBHOOK_URL));
+  exit;
+}
+
+
+$content = file_get_contents("php://input");
+$update = json_decode($content, true);
+
+if (!$update) {
+  // receive wrong update, must not happen
+  exit;
+}
+
+if (isset($update["message"])) {
+  processMessage($update["message"]);
+}
